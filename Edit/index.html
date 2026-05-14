@@ -285,7 +285,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             
             // --- CONSTANTS & STATE ---
-            const API_BASE_URL = '../';
+            const API_BASE_URL = '../index.php';
             let storyMapData = null;
             let currentSlideIndex = null;
             let isConfigOpen = false;
@@ -696,7 +696,7 @@
                 }
 
                 // Fix relative paths for thumbnails in the sidebar
-                if (url.startsWith('storymap_data/')) {
+                if (url.startsWith('storymap_data/') || url.startsWith('images/')) {
                     return '../' + url;
                 }
 

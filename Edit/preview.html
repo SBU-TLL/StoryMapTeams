@@ -51,7 +51,7 @@
                 return `https://img.youtube.com/vi/${ytMatch[1]}/mqdefault.jpg`;
             }
             // Local path fix (preview is in Edit/ folder)
-            if (url.startsWith('storymap_data/')) {
+            if (url.startsWith('storymap_data/') || url.startsWith('images/')) {
                 return '../' + url;
             }
             return url;
@@ -64,7 +64,7 @@
         if (id) {
             console.log(`Preview: Found ID ${id}, fetching data...`);
             // Fetch from the API endpoint (index.php is in the parent directory)
-            fetch(`../?id=${id}`)
+            fetch(`../index.php?id=${id}`)
                 .then(res => {
                     if(!res.ok) throw new Error("Failed to load StoryMap data");
                     return res.json();
@@ -73,7 +73,7 @@
                     // Fix paths for standalone mode too
                     if (data.storymap && data.storymap.slides) {
                         data.storymap.slides.forEach(slide => {
-                            if (slide.media && slide.media.url && slide.media.url.startsWith('storymap_data/')) {
+                            if (slide.media && slide.media.url && (slide.media.url.startsWith('storymap_data/') || slide.media.url.startsWith('images/'))) {
                                 slide.media.url = '../' + slide.media.url;
                             }
                         });
@@ -109,11 +109,11 @@
             }
             
             // --- FIX PATHS ---
-            // Local paths like "storymap_data/images/..." need to be "../storymap_data/images/..." 
+            // Local paths like "images/..." need to be "../images/..." 
             // because this preview is inside the Edit/ folder.
             if (data.storymap.slides) {
                 data.storymap.slides.forEach(slide => {
-                    if (slide.media && slide.media.url && slide.media.url.startsWith('storymap_data/')) {
+                    if (slide.media && slide.media.url && (slide.media.url.startsWith('storymap_data/') || slide.media.url.startsWith('images/'))) {
                         slide.media.url = '../' + slide.media.url;
                     }
                 });
