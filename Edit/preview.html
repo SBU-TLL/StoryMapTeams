@@ -57,6 +57,62 @@
             return url;
         };
 
+        const startMarkerSync = (data) => {
+            const syncMarkers = () => {
+                if (!storymapInstance || !storymapInstance.map) return;
+
+                // Iterate through all layers on the Leaflet map
+                storymapInstance.map.eachLayer(layer => {
+                    // Identify StoryMap markers by their classes
+                    if (layer._icon && (layer._icon.classList.contains('vco-mapmarker') || layer._icon.classList.contains('vco-mapmarker-active'))) {
+                        const iconEl = layer._icon;
+                        const title = iconEl.getAttribute('title');
+
+                        // Find the corresponding slide data by matching the title (headline)
+                        const slide = data.storymap.slides.find(s => s.text && s.text.headline === title);
+
+                        if (slide && slide.media && slide.media.url) {
+                            const imageUrl = getThumbnailUrl(slide.media.url);
+
+                            // Inject or update the thumbnail div
+                            let imgDiv = iconEl.querySelector('.custom-marker-img');
+                            if (!imgDiv) {
+                                imgDiv = document.createElement('div');
+                                imgDiv.className = 'custom-marker-img';
+
+                                // Precise styling to fit inside the StoryMap pin circle
+                                Object.assign(imgDiv.style, {
+                                    width: '28px',
+                                    height: '28px',
+                                    backgroundImage: `url('${imageUrl}')`,
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'center',
+                                    borderRadius: '6px',
+                                    position: 'absolute',
+                                    top: '5px',
+                                    left: '50%',
+                                    marginLeft: '-14px',
+                                    zIndex: '10'
+                                });
+                                iconEl.appendChild(imgDiv);
+                            } else {
+                                // Use dataset to avoid redundant background updates
+                                if (imgDiv.dataset.url !== imageUrl) {
+                                    imgDiv.style.backgroundImage = `url('${imageUrl}')`;
+                                    imgDiv.dataset.url = imageUrl;
+                                }
+                            }
+                        }
+                    }
+                });
+            };
+
+            // Run synchronization immediately and then every 500ms
+            syncMarkers();
+            if (window.markerSyncInterval) clearInterval(window.markerSyncInterval);
+            window.markerSyncInterval = setInterval(syncMarkers, 500);
+        };
+
         // Check for ID in query string for standalone preview
         const urlParams = new URLSearchParams(window.location.search);
         const id = urlParams.get('id');
@@ -79,6 +135,10 @@
                         });
                     }
                     storymapInstance = new KLStoryMap.StoryMap('storymap-container', data);
+                    
+                    // Give the DOM a moment to render the map, then sync markers
+                    setTimeout(() => startMarkerSync(data), 100);
+
                     window.onresize = function() {
                         if(storymapInstance) {
                             storymapInstance.updateDisplay();
@@ -153,59 +213,7 @@
                     window.parent.postMessage({ type: 'map-loaded' }, '*');
 
                     // --- CUSTOM MARKER ICONS (Persistent Sync) ---
-                    const syncMarkers = () => {
-                        if (!storymapInstance || !storymapInstance.map) return;
-
-                        // Iterate through all layers on the Leaflet map
-                        storymapInstance.map.eachLayer(layer => {
-                            // Identify StoryMap markers by their classes
-                            if (layer._icon && (layer._icon.classList.contains('vco-mapmarker') || layer._icon.classList.contains('vco-mapmarker-active'))) {
-                                const iconEl = layer._icon;
-                                const title = iconEl.getAttribute('title');
-
-                                // Find the corresponding slide data by matching the title (headline)
-                                const slide = data.storymap.slides.find(s => s.text && s.text.headline === title);
-
-                                if (slide && slide.media && slide.media.url) {
-                                    const imageUrl = getThumbnailUrl(slide.media.url);
-
-                                    // Inject or update the thumbnail div
-                                    let imgDiv = iconEl.querySelector('.custom-marker-img');
-                                    if (!imgDiv) {                                        imgDiv = document.createElement('div');
-                                        imgDiv.className = 'custom-marker-img';
-
-                                        // Precise styling to fit inside the StoryMap pin circle
-                                        Object.assign(imgDiv.style, {
-                                            width: '28px',
-                                            height: '28px',
-                                            backgroundImage: `url('${imageUrl}')`,
-                                            backgroundSize: 'cover',
-                                            backgroundPosition: 'center',
-                                            borderRadius: '6px',
-                                            position: 'absolute',
-                                            top: '5px',
-                                            left: '50%',
-                                            marginLeft: '-14px',
-                                            zIndex: '10'
-                                        });
-                                        iconEl.appendChild(imgDiv);
-                                    } else {
-                                        // Use dataset to avoid redundant background updates
-                                        if (imgDiv.dataset.url !== imageUrl) {
-                                            imgDiv.style.backgroundImage = `url('${imageUrl}')`;
-                                            imgDiv.dataset.url = imageUrl;
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    };
-
-                    // Run synchronization immediately and then every 500ms to handle 
-                    // StoryMapJS internal DOM updates (like slide changes or zoom)
-                    syncMarkers();
-                    if (window.markerSyncInterval) clearInterval(window.markerSyncInterval);
-                    window.markerSyncInterval = setInterval(syncMarkers, 500);
+                    startMarkerSync(data);
 
                     }, 10);
                     } catch (e) {                console.error("Preview: Error rendering map", e);

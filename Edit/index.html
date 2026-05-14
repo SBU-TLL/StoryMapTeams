@@ -79,6 +79,9 @@
                      <button id="toggle-map-config" class="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all" title="Map Settings">
                         <i class="fas fa-cog"></i>
                     </button>
+                    <button id="publish-btn" class="h-9 px-3 rounded-full flex items-center justify-center text-emerald-600 hover:text-white hover:bg-emerald-600 transition-all font-medium text-sm group border border-emerald-600" title="Publish StoryMap">
+                        <i class="fas fa-share-square mr-2 group-hover:scale-110 transition-transform"></i> Publish
+                    </button>
                     <button id="save-server-btn" class="h-9 px-3 rounded-full flex items-center justify-center text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 transition-all font-medium text-sm group" title="Save to Server">
                         <i class="fas fa-cloud-upload-alt mr-2 group-hover:scale-110 transition-transform"></i> Save
                     </button>
@@ -266,6 +269,30 @@
 
     </div>
 
+    <!-- PUBLISH MODAL -->
+    <div id="publish-modal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center opacity-0 transition-opacity duration-200">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-96 transform scale-95 transition-transform duration-200">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-slate-800">Publish StoryMap</h3>
+                <button id="close-publish-modal" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            </div>
+            <p class="text-sm text-slate-500 mb-4">Your StoryMap is available at the following link. Click to copy.</p>
+            
+            <div class="relative mb-6">
+                <div id="publish-url-container" class="bg-slate-50 border border-slate-200 rounded-lg p-3 pr-10 text-sm text-slate-600 break-all cursor-pointer hover:bg-slate-100 hover:border-emerald-300 transition-colors" title="Click to copy">
+                    <span id="publish-url-text">https://apps.tlt.stonybrook.edu/StoryMapTeams/Edit/preview.html?id=1</span>
+                </div>
+                <div id="copy-feedback" class="absolute top-1/2 -translate-y-1/2 right-3 text-emerald-500 text-xs font-bold opacity-0 transition-opacity pointer-events-none">Copied!</div>
+            </div>
+
+            <div class="flex space-x-3">
+                <button id="view-published-btn" class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors">
+                    <i class="fas fa-external-link-alt mr-2"></i> View Published Page
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- DELETE CONFIRMATION MODAL -->
     <div id="delete-modal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center opacity-0 transition-opacity duration-200">
         <div class="bg-white rounded-2xl shadow-2xl p-6 w-80 transform scale-95 transition-transform duration-200">
@@ -292,6 +319,14 @@
             let isDraggingEnabled = false;
 
             // --- DOM ELEMENTS ---
+            const publishBtn = document.getElementById('publish-btn');
+            const publishModal = document.getElementById('publish-modal');
+            const closePublishModal = document.getElementById('close-publish-modal');
+            const publishUrlContainer = document.getElementById('publish-url-container');
+            const publishUrlText = document.getElementById('publish-url-text');
+            const copyFeedback = document.getElementById('copy-feedback');
+            const viewPublishedBtn = document.getElementById('view-published-btn');
+
             const viewList = document.getElementById('view-list');
             const viewEdit = document.getElementById('view-edit');
             const pointsList = document.getElementById('points-list');
@@ -804,6 +839,39 @@
                         updateSaveStatus('Unsaved changes');
                     }
                 }
+            });
+
+            // --- PUBLISH LOGIC ---
+            const getPublishUrl = () => {
+                const id = idInput.value || '1';
+                return `https://apps.tlt.stonybrook.edu/StoryMapTeams/Edit/preview.html?id=${id}`;
+            };
+
+            publishBtn.addEventListener('click', () => {
+                publishUrlText.textContent = getPublishUrl();
+                publishModal.classList.remove('hidden');
+                setTimeout(() => publishModal.classList.remove('opacity-0'), 10);
+            });
+
+            const closePublish = () => {
+                publishModal.classList.add('opacity-0');
+                setTimeout(() => publishModal.classList.add('hidden'), 200);
+            };
+
+            closePublishModal.addEventListener('click', closePublish);
+
+            publishUrlContainer.addEventListener('click', () => {
+                const url = getPublishUrl();
+                navigator.clipboard.writeText(url).then(() => {
+                    copyFeedback.classList.remove('opacity-0');
+                    setTimeout(() => copyFeedback.classList.add('opacity-0'), 2000);
+                }).catch(err => {
+                    console.error('Failed to copy: ', err);
+                });
+            });
+
+            viewPublishedBtn.addEventListener('click', () => {
+                window.open(getPublishUrl(), '_blank');
             });
 
             // Initial Load
