@@ -119,8 +119,8 @@
 
         if (id) {
             console.log(`Preview: Found ID ${id}, fetching data...`);
-            // Fetch from the API endpoint (index.php is in the parent directory)
-            fetch(`../index.php?id=${id}`)
+            // Fetch from the API endpoint
+            fetch(`../api.php?id=${id}`)
                 .then(res => {
                     if(!res.ok) throw new Error("Failed to load StoryMap data");
                     return res.json();
