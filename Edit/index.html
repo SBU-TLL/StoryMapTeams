@@ -752,6 +752,11 @@
                     if (!idInput.value) {
                         idInput.value = '1'; // Default to 1 if user clears input
                     }
+                    // Update the browser URL without reloading
+                    const newUrl = new URL(window.location);
+                    newUrl.searchParams.set('id', idInput.value);
+                    window.history.pushState({}, '', newUrl);
+
                     updateIframeSrc();
                     loadStoryMap();
                 }
