@@ -84,7 +84,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['success' => true, 'message' => 'StoryMap saved successfully.']);
     } else {
         http_response_code(500); // Internal Server Error
-        echo json_encode(['success' => false, 'message' => 'Failed to write to file on server.']);
+        echo json_encode(['success' => false, 'message' => $file_path]);
+
     }
     exit;
 }
